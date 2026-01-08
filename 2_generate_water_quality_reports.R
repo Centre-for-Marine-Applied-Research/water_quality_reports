@@ -1,10 +1,10 @@
-# This script generates county reports for all counties specified in << county >>
+# This script generates the county report for << county >>
 
 # SECTION 1: Read in document history and report files
 
-# SECTION 2: Specify county(ies) for which to generate reports
+# SECTION 2: Specify county for which to generate report
 
-# SECTION 2: Generate report(s)
+# SECTION 2: Generate report
 
 library(dplyr)
 library(here)
@@ -33,7 +33,3 @@ quarto::quarto_render(
     doc_notes = hist$Amendments
   )
 )
-
-
-
-

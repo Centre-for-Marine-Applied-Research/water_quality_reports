@@ -1,9 +1,16 @@
 # November 10, 2025
 
-# For Open Data Portal Data
-## VR2AR observations from a unit paired with a hobo temp were removed
-### (temperature and depth)
-## Only the max flag column is published for qc info
+# Assemble county datasets
+
+## For CMAR use:
+### rds file exported to R:\data_branches\water_quality\processed_data\assembled_data
+### includes all flag columns
+### includes VR2AR data from deployments with a hobo sensor at the same depth
+
+## For Open Data Portal:
+### csv file exported to R:\data_branches\water_quality\open_data
+### only includes summary qc flags
+### does not include any VR2 data from deployments that have a hobo sensor at the same depth
 
 library(data.table)
 library(dplyr)
@@ -11,9 +18,13 @@ library(purrr)
 library(qaqcmar)
 library(sensorstrings)
 
-county <- "pictou"
+# SECTION 1: Update County------------------------------------------------------
+
+county <- "annapolis"
 
 path <- file.path("R:/data_branches/water_quality/processed_data/qc_data")
+
+# SECTION 2: Import and Check Data ----------------------------------------
 
 dat_all <- qc_assemble_county_data(folder = county) %>%
   mutate(
@@ -24,10 +35,8 @@ dat_all <- qc_assemble_county_data(folder = county) %>%
       lease == "667" ~ "0667",
       lease == "716" ~ "0716",
       lease == "692" ~ "0692",
-
       #lunenburg
       lease == "995" ~ "0995",
-
       # guys
       lease == "1" ~ "0001",
       lease == "28" ~ "0028",
@@ -38,26 +47,24 @@ dat_all <- qc_assemble_county_data(folder = county) %>%
       lease == "623" ~ "0623",
       lease == "839" ~ "0839",
       lease == "904" ~ "0904",
-
       # shelburne
       lease == "967" ~ "0967",
-
       TRUE ~ lease
     )
   )
 
+# review waterbody, station, and lease for spelling and location errors
 unique(dat_all$waterbody)
 unique(dat_all$station)
 unique(dat_all$lease)
 
-# check for duplicate rows ------------------------------------------------
-
+# check for duplicate rows
 dat_dups <- dat_all %>%
   data.table() %>%
   duplicated()
 if(any(dat_dups == TRUE)) warning("duplicated rows detected in dat")
 
-# open data portal (summary flags) -------------------------------------------
+# SECTION 3: Open Data Portal -------------------------------------------
 
 # to remove the qc_test_variable columns (leaving only the max flag col)
 rm_cols <- thresholds %>%
@@ -102,7 +109,7 @@ dat %>%
   qc_assign_flag_labels() %>%
   ss_export_county_files(county = county, export_rds = FALSE)
 
-# cmar county data (all flags) --------------------------------------------
+# SECTION 4: CMAR data --------------------------------------------
 
 # remove columns that are all NA
 dat %>%
