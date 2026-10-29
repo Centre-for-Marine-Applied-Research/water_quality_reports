@@ -1,3 +1,4 @@
+# October 28, 2026
 # March 25, 2024
 
 # Parameters to source for Water Quality reports
@@ -34,7 +35,21 @@ custom_sal_ylims <- c(
   "1443"
 )
 
-# stations where flags of 3 should be kept (typically low salinity areas where
-# sal gets flagged by grossrange user threshold)
+
+# keep low salinity -------------------------------------------------------
+
 keep_sus_sal <- c("Monks Head", "Pictou Landing", "1443")
+
+# force factor for maps ----------------------------------------------------
+
+force_fact_vec <- c(Halifax = 40, Richmond = 23, Inverness = 27, Pictou = 35)
+
+# x-lims for maps ---------------------------------------------------------
+
+x_lims_list <- list(Digby =  c(-66.7, -65.4), Yarmouth = c(-66.5, -65.4))
+
+
+
+
+
 

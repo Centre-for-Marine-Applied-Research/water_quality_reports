@@ -49,20 +49,25 @@ correct_do_data <- function(dat, sal = 30.6) {
 # figure height -----------------------------------------------------------
 # calculate the height of figure based on the number of measured variables
 
-calc_fig_height <- function(dat, h1) {
+# calc_fig_height <- function(dat, h1) {
+#
+#   n_vars <- dat %>%
+#     ss_pivot_longer() %>%
+#     distinct(variable) %>%
+#     nrow()
+#
+#   if(n_vars == 1) h = h1
+#   if(n_vars == 2) h = 2 * h1
+#   if(n_vars == 3) h = 3 * h1
+#   if(n_vars == 4) h = 4 * h1
+#   if(n_vars > 4) h = 10.9
+#
+#   h
+# }
 
-  n_vars <- dat %>%
-    ss_pivot_longer() %>%
-    distinct(variable) %>%
-    nrow()
-
-  if(n_vars == 1) h = h1
-  if(n_vars == 2) h = 2 * h1
-  if(n_vars == 3) h = 3 * h1
-  if(n_vars == 4) h = 4 * h1
-  if(n_vars > 4) h = 10.9
-
-  h
+calc_fig_height <- function(dat, h1, var_cols) {
+  n_vars <- sum(colnames(dat) %in% var_cols)
+  min(n_vars * h1, 10.9)
 }
 
 # figure caption ----------------------------------------------------------

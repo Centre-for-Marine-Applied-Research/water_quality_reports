@@ -12,7 +12,7 @@ library(readxl)
 
 # SECTION 1: SET UP ---------------------------------------------
 
-county <- "Guysborough"
+county <- "Lunenburg"
 
 hist <- read_excel(
   "R:/tracking_sheets/water_quality_report_tracker.xlsx", sheet = "Tracking"
@@ -21,7 +21,7 @@ hist <- read_excel(
 
 # SECTION 2: GENERATE REPORTS --------------------------------------------------------
 
-report <- here("1_water_quality_report.qmd")
+report <- here("2_water_quality_report.qmd")
 
 quarto::quarto_render(
   input = report,

@@ -23,7 +23,7 @@
           text(size: 9pt, font: font, weight: "regular", fill: black, "CMAR WATER QUALITY REPORT")
           ),
         align(right,
-          text(size: 9pt, font: font, weight: "regular", fill: black, counter(page).display("1"))
+          text(size: 9pt, font: font, weight: "regular", fill: black, context(counter(page).display("1")))
           ),
       ))
   )
