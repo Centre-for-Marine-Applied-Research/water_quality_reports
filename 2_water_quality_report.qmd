@@ -112,6 +112,7 @@ title_date <- as_date(params$doc_date[length(params$doc_date)])
 dat_raw <- suppressMessages(ss_import_data(county = county))
 
 dat <- dat_raw |>
+  add_do_salinity_factor() |>
   qc_pivot_longer() |>
   report_filter_flags(keep_sus_sal = keep_sus_sal) |>
   qc_pivot_wider() |>
@@ -119,7 +120,7 @@ dat <- dat_raw |>
     waterbody, station, lease, latitude, longitude,
     deployment_range, string_configuration,
     sensor_type, sensor_serial_number, sensor_depth_at_low_tide_m, timestamp_utc,
-    any_of(vars)
+    any_of(c(vars, "do_salinity_factor"))
   )
 
 # unique waterbodies
@@ -136,8 +137,10 @@ crs <- 4326
 if("dissolved_oxygen_uncorrected_mg_per_l" %in% colnames(dat)) {
   dat <- correct_do_data(dat)
   DO_mgL <- TRUE
-} else DO_mgL <- FALSE
-
+} else {
+  dat <- select(dat, -any_of("do_salinity_factor"))
+  DO_mgL <- FALSE
+}
 
 report_table <- dat |>
   sensorstrings::ss_write_report_table(keep_waterbody = TRUE, var_sep = " \\ ")
@@ -338,7 +341,7 @@ Note that some sensors (dissolved oxygen and salinity) may drift over time. The 
 
 For more technical details about the Quality Control tests, visit the CMAR [Data Governance website](https://dempsey-cmar.github.io/cmp-data-governance/pages/cmp_about.html).
 
-`r if(DO_mgL){"## Dissolved Oxygen \nDissolved oxygen was measured in units of percent saturation or mg/L, depending on the deployment. Measurements in mg/L were corrected for salinity using the Garcia-Gordon (1992) salinity correction factor [@RN24366] with a salinity value of 30.6 practical salinity units (based on available data for the region). This correction factor is not required for values recorded in percent saturation. The correction factor calculations are available in the CMAR R package [docalcs](https://github.com/dempsey-CMAR/docalcs)."}`
+`r if(DO_mgL){"## Dissolved Oxygen \nDissolved oxygen was measured in units of percent saturation or mg/L, depending on the deployment. Measurements in mg/L were corrected for salinity using the Garcia-Gordon (1992) salinity correction factor ($\\text{F}_\\text{s}$) [@RN24366] with a salinity value of 30.6 practical salinity units (based on available data for the region). $\\text{F}_\\text{s}$ also depends on temperature, and so corrected dissolved oxygen values are not shown where the temperature measured by the sensor failed Quality Control. $\\text{F}_\\text{s}$ is not required for values recorded in percent saturation. The correction factor calculations are available in the CMAR R package [docalcs](https://github.com/centre-for-marine-applied-research/docalcs)."}`
 
 \newpage
 # `r county` County Water Quality Data
@@ -397,9 +400,6 @@ for(w in seq_along(waterbodies)){
     dat_j <- dat_w |>
       filter(station == station_j) |>
       select(where(~ !all(is.na(.x)))) # drop cols that are all NA so there won't be a plot panel
-    
-    # ylims_do  <- !(station_j %in% custom_do_ylims)
-    # ylims_sal <- !(station_j %in% custom_sal_ylims)
     
     # y-limits: NULL replaces the standard limits with the ggplot default.
     # Name both DO variables to match the old standard_do_ylims = FALSE,
