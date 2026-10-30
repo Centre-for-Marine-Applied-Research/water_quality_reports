@@ -42,7 +42,6 @@ library(stringr)
 library(tidyr)
 
 source(here("functions/subchunkify.R"))
-source(here("functions/import_map_params.R"))
 source(here("functions/report_helper_foos.R"))
 source(here("functions/report_params.R"))
 source(here("functions/report_filter_flags.R"))
@@ -112,10 +111,10 @@ title_date <- as_date(params$doc_date[length(params$doc_date)])
 # read all rds files for county and rbind together
 dat_raw <- suppressMessages(ss_import_data(county = county))
 
-dat <- dat_raw %>%
-  qc_pivot_longer() %>%
-  report_filter_flags(keep_sus_sal = keep_sus_sal) %>%
-  qc_pivot_wider() %>%
+dat <- dat_raw |>
+  qc_pivot_longer() |>
+  report_filter_flags(keep_sus_sal = keep_sus_sal) |>
+  qc_pivot_wider() |>
   select(
     waterbody, station, lease, latitude, longitude,
     deployment_range, string_configuration,
@@ -140,7 +139,7 @@ if("dissolved_oxygen_uncorrected_mg_per_l" %in% colnames(dat)) {
 } else DO_mgL <- FALSE
 
 
-report_table <- dat %>%
+report_table <- dat |>
   sensorstrings::ss_write_report_table(keep_waterbody = TRUE, var_sep = " \\ ")
 
 ```
@@ -164,17 +163,17 @@ This document should be considered as a guide only, since data collection and re
 #| dpi: 400
 
 # NS county boundaries
-ns <- read_sf(here("data/merged_counties2/Merged_Counties2.shp")) %>% 
-  na.omit() %>% 
+ns <- read_sf(here("data/merged_counties2/Merged_Counties2.shp")) |> 
+  na.omit() |> 
   st_transform(crs = crs) 
 
-nb_pei <- filter(PROV, PT == "NB"|PT == "PE") %>%
+nb_pei <- filter(PROV, PT == "NB"|PT == "PE") |>
   st_transform(crs = crs)
 
 can <- bind_rows(
-  ns %>% st_simplify(dTolerance = 1000), 
+  ns |> st_simplify(dTolerance = 1000), 
   nb_pei
-) %>% 
+) |> 
   mutate(
     col_county = if_else(County == county, 1, 0),
     col_county = if_else(is.na(col_county), 0, col_county),
@@ -217,7 +216,7 @@ k = k + 1
 #| dpi: 400
 
 # extract unique station locations and convert to sf object
-stations_sf <- report_table %>%
+stations_sf <- report_table |>
   mutate(
     Station = case_when(
       str_detect(Station, "Antigonish") ~ "Antigonish 1, 2, 3",
@@ -225,7 +224,7 @@ stations_sf <- report_table %>%
         "Great Bras d'Or Channel NE - W, E",
       str_detect(Station, "Great Bras d'Or Channel SW") ~ 
         "Great Bras d'Or Channel SW - W, E",
-      str_detect(Station, "Little Narrows") ~ "Little  Narrows N, S",
+      str_detect(Station, "Little Narrows") ~ "Little Narrows N, S",
       str_detect(Station, "McNabs Point") ~ "McNabs Point 1, 2, 3",
       str_detect(Station, "Nyanza Bay") ~ "Nyanza Bay W, E",
       str_detect(Station, "Roy Island") ~ "Roy Island 1, 2, 3", 
@@ -240,9 +239,9 @@ stations_sf <- report_table %>%
       str_detect(Station, "Tickle Island") ~ "Tickle Island (1)",
       
       TRUE ~ Station)
-  ) %>% 
-  select(Waterbody, Station, Latitude, Longitude) %>%
-  distinct(Station, .keep_all = TRUE) %>%
+  ) |> 
+  select(Waterbody, Station, Latitude, Longitude) |>
+  distinct(Station, .keep_all = TRUE) |>
   st_as_sf(
     coords = c("Longitude", "Latitude"), remove = FALSE,
     crs = crs, agr = "constant"
@@ -250,11 +249,11 @@ stations_sf <- report_table %>%
 
 x_lims <- if (county %in% names(x_lims_list)) x_lims_list[[county]] else NULL
 
-county_params <- county_extents |> 
+county_params <- county_map_params |> 
   filter(county == !!county)
 
-county_sf <- ns %>% 
-  st_crop(get_county_extent(county)) 
+county_sf <- ns |> 
+  st_crop(get_county_extent(county_params)) 
 
 
 ggplot() +
@@ -357,24 +356,23 @@ Water Quality data is arranged by waterbody and station. For each waterbody, the
 for(w in seq_along(waterbodies)){
   
   waterbody_w <- waterbodies[w]
-  dat_w <- dat %>% filter(waterbody == waterbody_w)
+  dat_w <- dat |> filter(waterbody == waterbody_w)
   
   stations <- sort(unique(dat_w$station))
   
-  if(k > 1) cat("\n\n\\pagebreak\n")
+  if(w > 1) cat("\n\n\\pagebreak\n")
   
   cat('\n##', waterbody_w, '\n')
   
-  i_table <- i + 1
+  i_table <- i + w
   
   print(glue("\n**Table {i_table}:** {table_caption} {waterbody_w}."))
   
-  #waterbody table -could put this into a function
-  table_i <- report_table %>%
+  #waterbody table 
+  table_i <- report_table |>
+    filter(Waterbody == waterbody_w) |> 
     select(-Waterbody) |> 
-    mutate(
-      across(everything(), ~ paste0("[", .x, "],"))
-    ) %>% 
+    mutate(across(everything(), ~ paste0("[", .x, "],"))) |> 
     t()
   
   cat(
@@ -396,22 +394,34 @@ for(w in seq_along(waterbodies)){
     if(j > 1) cat("\n\n\\pagebreak\n")
     
     # subset data to station of interest
-    dat_j <- dat_w %>%
-      filter(station == station_j) %>%
-     # ss_convert_depth_to_ordered_factor() %>% 
+    dat_j <- dat_w |>
+      filter(station == station_j) |>
       select(where(~ !all(is.na(.x)))) # drop cols that are all NA so there won't be a plot panel
     
-    ylims_do  <- !(station_j %in% custom_do_ylims)
-    ylims_sal <- !(station_j %in% custom_sal_ylims)
+    # ylims_do  <- !(station_j %in% custom_do_ylims)
+    # ylims_sal <- !(station_j %in% custom_sal_ylims)
     
+    # y-limits: NULL replaces the standard limits with the ggplot default.
+    # Name both DO variables to match the old standard_do_ylims = FALSE,
+    # which applied to both the % sat and mg/L panels.
+    ylims_j <- NULL
+    if (station_j %in% custom_do_ylims) {
+      ylims_j <- c(ylims_j, list(
+        dissolved_oxygen_percent_saturation = NULL,
+        dissolved_oxygen_mg_per_l = NULL
+      ))
+    }
+    if (station_j %in% custom_sal_ylims) {
+      ylims_j <- c(ylims_j, list(salinity_psu = NULL))
+    }
+
     # height of figure j
     h <- calc_fig_height(dat_j, h1 = 2.4, var_cols = vars)
    
     # figure
     p <- ss_plot_variables(
       dat_j,
-      standard_do_ylims = ylims_do,
-      standard_sal_ylims = ylims_sal,
+      ylims = ylims_j,
       yaxis_newline = FALSE
     )
     
@@ -452,13 +462,10 @@ hist <- data.frame(
   Version = params$doc_version,
   Date = params$doc_date,
   Amendments = params$doc_notes
-) %>% 
+) |> 
   mutate(
     Date = format(Date),
-     across(everything(), ~ paste0("[", .x, "],"))
-    # across(.cols = c(1:3), .fns = ~as.character(.x)),
-    # across(.cols = c(1:3), .fns = ~paste0("[", .x, "],"))
-  ) %>% 
+    across(everything(), ~ paste0("[", .x, "],"))) |> 
   t()
 
 cat(
