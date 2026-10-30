@@ -31,16 +31,18 @@ report_filter_flags <- function(
 
   dat <- dat %>%
     filter(
-      (variable == "dissolved_oxygen_percent_saturation" &
-         grossrange_flag_value %in% c(1, 3, NA) &
-         climatology_flag_value %in% c(1, 3, NA) &
-         spike_flag_value %in% c(1, 3, NA) &
-         rolling_sd_flag_value %in% c(1, NA) &
-
-         ((variable == "dissolved_oxygen_percent_saturation" &
-             human_in_loop_flag_dissolved_oxygen_percent_saturation %in% c(1, NA)) |
-            (variable == "dissolved_oxygen_uncorrected_mg_per_l" &
-               human_in_loop_flag_dissolved_oxygen_uncorrected_mg_per_l %in% c(1, NA)))
+      (variable %in% c(
+        "dissolved_oxygen_percent_saturation",
+        "dissolved_oxygen_uncorrected_mg_per_l"
+      ) &
+        grossrange_flag_value %in% c(1, 3, NA) &
+        climatology_flag_value %in% c(1, 3, NA) &
+        spike_flag_value %in% c(1, 3, NA) &
+        rolling_sd_flag_value %in% c(1, NA) &
+        ((variable == "dissolved_oxygen_percent_saturation" &
+            human_in_loop_flag_dissolved_oxygen_percent_saturation %in% c(1, NA)) |
+           (variable == "dissolved_oxygen_uncorrected_mg_per_l" &
+              human_in_loop_flag_dissolved_oxygen_uncorrected_mg_per_l %in% c(1, NA)))
       ) |
 
         (variable == "dissolved_oxygen_uncorrected_mg_per_l" &
