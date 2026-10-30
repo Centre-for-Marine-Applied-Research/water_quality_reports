@@ -45,13 +45,6 @@ report_filter_flags <- function(
               human_in_loop_flag_dissolved_oxygen_uncorrected_mg_per_l %in% c(1, NA)))
       ) |
 
-        (variable == "dissolved_oxygen_uncorrected_mg_per_l" &
-           grossrange_flag_value %in% c(1, 3, NA) &
-           climatology_flag_value %in% c(1, 3, NA) &
-           spike_flag_value %in% c(1, 3, NA) &
-           rolling_sd_flag_value %in% c(1, NA)
-        ) |
-
         (variable == "sensor_depth_measured_m" &
            qc_flag_value %in% keep_sensor_depth_measured_m) |
 
