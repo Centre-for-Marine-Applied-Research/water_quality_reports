@@ -41,8 +41,6 @@ library(sensorstrings)
 library(stringr)
 library(tidyr)
 
-options(knitr.duplicate.label = "allow")
-
 source(here("functions/subchunkify.R"))
 source(here("functions/import_map_params.R"))
 source(here("functions/report_helper_foos.R"))
@@ -114,10 +112,6 @@ title_date <- as_date(params$doc_date[length(params$doc_date)])
 # read all rds files for county and rbind together
 dat_raw <- suppressMessages(ss_import_data(county = county))
 
-# if(!("lease" %in% colnames(dat_raw))) {
-#   dat_raw <- mutate(dat_raw, lease = NA_character_)
-# }
-
 dat <- dat_raw %>%
   qc_pivot_longer() %>%
   report_filter_flags(keep_sus_sal = keep_sus_sal) %>%
@@ -137,14 +131,12 @@ table_caption <- "Deployment details for"
 
 i = 1 # counter for table
 k = 1 # counter for figure number
-text_size <- 3.5
 crs <- 4326
 
 # dissolved oxygen units considerations
 if("dissolved_oxygen_uncorrected_mg_per_l" %in% colnames(dat)) {
   dat <- correct_do_data(dat)
   DO_mgL <- TRUE
-  vars <- c(vars, "dissolved_oxygen_mg_per_l")
 } else DO_mgL <- FALSE
 
 
@@ -224,13 +216,6 @@ k = k + 1
 #| fig.height: 3.75
 #| dpi: 400
 
-if(county == "Guysborough") text_size <- 3
-
-dummy_coords <- import_map_params(county)
-
-county_sf <- ns %>% 
-  st_crop(dummy_coords) 
-
 # extract unique station locations and convert to sf object
 stations_sf <- report_table %>%
   mutate(
@@ -263,16 +248,22 @@ stations_sf <- report_table %>%
     crs = crs, agr = "constant"
   )
 
-force_fact <- if (county %in% names(force_fact_vec)) force_fact_vec[[county]] else 50
 x_lims <- if (county %in% names(x_lims_list)) x_lims_list[[county]] else NULL
+
+county_params <- county_extents |> 
+  filter(county == !!county)
+
+county_sf <- ns %>% 
+  st_crop(get_county_extent(county)) 
+
 
 ggplot() +
   geom_sf(data = county_sf) +
   geom_sf(data = stations_sf) +
   ggsflabel::geom_sf_text_repel(
     data = stations_sf, aes(label = Station), 
-    force = force_fact, max.overlaps = 30, seed = 123,
-    size = text_size, color = "black", bg.color = "white"
+    force = county_params$force_fact, max.overlaps = 30, seed = 123,
+    size = county_params$text_size, color = "black", bg.color = "white"
   ) +
   coord_sf(expand = FALSE, xlim = x_lims) +
   annotation_scale(location = "br") +
@@ -426,7 +417,7 @@ for(w in seq_along(waterbodies)){
     
     cat('\n###', station_j, '\n')
     
-    subchunkify(p, fig_height = h, fig_width = 8.5, dpi = 300)
+    subchunkify(p, label = k, fig_height = h, fig_width = 8.5, dpi = 300)
     
     # figure caption
     fig_caption_j <- paste0("**Figure ", k, ":** ", station_j, fig_caption)
