@@ -36,23 +36,7 @@ correct_do_data <- function(dat, sal = 30.6) {
 # figure height -----------------------------------------------------------
 # calculate the height of figure based on the number of measured variables
 
-# calc_fig_height <- function(dat, h1) {
-#
-#   n_vars <- dat %>%
-#     ss_pivot_longer() %>%
-#     distinct(variable) %>%
-#     nrow()
-#
-#   if(n_vars == 1) h = h1
-#   if(n_vars == 2) h = 2 * h1
-#   if(n_vars == 3) h = 3 * h1
-#   if(n_vars == 4) h = 4 * h1
-#   if(n_vars > 4) h = 10.9
-#
-#   h
-# }
-
-calc_fig_height <- function(dat, h1, h_max = 10.9, var_cols) {
+calc_fig_height <- function(dat, h1, var_cols, h_max = 10.9) {
 
   dat <- select(dat, where(~ !all(is.na(.x))))
 
@@ -71,8 +55,7 @@ glue_sal_fig_caption <- function(fig_cap) {
 
 # get coordinates for county map ------------------------------------------
 
-get_county_extent <- function(county, crs = 4326) {
-  ext <- county_extents[county_extents$county == county, ]
-  if (nrow(ext) == 0) stop("No map extent for county: ", county, call. = FALSE)
-  sf::st_bbox(unlist(ext[, c("xmin", "ymin", "xmax", "ymax")]), crs = sf::st_crs(crs))
+get_county_extent <- function(extents, crs = 4326) {
+  if (nrow(extents) == 0) stop("No map extent: ", call. = FALSE)
+  sf::st_bbox(unlist(extents[, c("xmin", "ymin", "xmax", "ymax")]), crs = sf::st_crs(crs))
 }
