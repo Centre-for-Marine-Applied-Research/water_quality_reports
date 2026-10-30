@@ -42,7 +42,7 @@ x_lims_list <- list(Digby =  c(-66.7, -65.4), Yarmouth = c(-66.5, -65.4))
 
 # county specific params --------------------------------------------------
 
-county_extents <- tibble::tribble(
+county_map_params <- tibble::tribble(
   ~county,        ~xmin,  ~xmax,  ~ymin, ~ymax, ~force_fact, ~text_size,
   "Annapolis",    -66,    -65.4,  44.5,  44.8,  50,            3.5,
   "Antigonish",   -62.1,  -61.4,  45.55, 45.9,  50,            3.5,
