@@ -17,13 +17,30 @@ report_filter_flags <- function(
     keep_temperature_degree_c = c(1, 3, NA)
 ) {
 
+  if (nrow(dat) == 0) {stop("No rows in dat to filter")}
+
+  # DO is filtered on each test, not on qc_flag, so its human in the loop
+  # flags must be checked here (qc_flag already includes them for the other
+  # variables). Add the columns as NA if a county has no DO hil flags.
+  hil_do_cols <- c(
+    "human_in_loop_flag_dissolved_oxygen_percent_saturation",
+    "human_in_loop_flag_dissolved_oxygen_uncorrected_mg_per_l"
+  )
+  dat[setdiff(hil_do_cols, colnames(dat))] <- NA
+
+
   dat <- dat %>%
     filter(
       (variable == "dissolved_oxygen_percent_saturation" &
          grossrange_flag_value %in% c(1, 3, NA) &
          climatology_flag_value %in% c(1, 3, NA) &
          spike_flag_value %in% c(1, 3, NA) &
-         rolling_sd_flag_value %in% c(1, NA)
+         rolling_sd_flag_value %in% c(1, NA) &
+
+         ((variable == "dissolved_oxygen_percent_saturation" &
+             human_in_loop_flag_dissolved_oxygen_percent_saturation %in% c(1, NA)) |
+            (variable == "dissolved_oxygen_uncorrected_mg_per_l" &
+               human_in_loop_flag_dissolved_oxygen_uncorrected_mg_per_l %in% c(1, NA)))
       ) |
 
         (variable == "dissolved_oxygen_uncorrected_mg_per_l" &
@@ -43,15 +60,6 @@ report_filter_flags <- function(
         (variable == "temperature_degree_c" &
            qc_flag_value %in% keep_temperature_degree_c)
     )
-
-  # why is human in loop here?
-  # # because human_in_loop flags not pivoted
-  # if("human_in_loop_flag_dissolved_oxygen_percent_saturation" %in% colnames(dat)) {
-  #
-  #   dat <- dat %>%
-  #     filter(
-  #       human_in_loop_flag_dissolved_oxygen_percent_saturation %in% c(1, NA))
-  # }
 
   dat
 }
