@@ -61,5 +61,3 @@ county_map_params <- tibble::tribble(
   "Yarmouth",     -67,    -65.4,  43.6,  44,    50,            3.5
 )
 
-
-

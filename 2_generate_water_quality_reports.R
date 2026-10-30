@@ -12,7 +12,7 @@ library(readxl)
 
 # SECTION 1: SET UP ---------------------------------------------
 
-county <- "Lunenburg"
+county <- "Annapolis"
 
 hist <- read_excel(
   "R:/tracking_sheets/water_quality_report_tracker.xlsx", sheet = "Tracking"

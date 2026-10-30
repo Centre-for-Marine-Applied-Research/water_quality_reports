@@ -135,7 +135,10 @@ crs <- 4326
 
 # dissolved oxygen units considerations
 if("dissolved_oxygen_uncorrected_mg_per_l" %in% colnames(dat)) {
-  dat <- correct_do_data(dat)
+  dat <- dat |> 
+    correct_do_data() |> 
+    # drop rows left with no data (corrected DO is NA where temperature failed)
+    filter(if_any(any_of(vars), ~ !is.na(.x)))
   DO_mgL <- TRUE
 } else {
   dat <- select(dat, -any_of("do_salinity_factor"))

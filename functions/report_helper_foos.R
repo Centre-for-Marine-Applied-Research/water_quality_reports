@@ -41,35 +41,6 @@ correct_do_data <- function(dat) {
     select(-dissolved_oxygen_uncorrected_mg_per_l, -do_salinity_factor)
 }
 
-
-#
-# correct_do_data <- function(dat, sal = 30.6) {
-#
-#   if(!("salinity_psu" %in% colnames(dat))) {
-#     dat$salinity_psu <- NA
-#
-#     rm_sal <- TRUE
-#   } else rm_sal <- FALSE
-#
-#   dat <- dat %>%
-#     mutate(
-#       sal_na = if_else(is.na(salinity_psu), TRUE, FALSE),
-#       salinity_psu = if_else(sal_na == TRUE, sal, salinity_psu),
-#     ) %>%
-#     do_salinity_correction() %>%
-#     mutate(
-#       dissolved_oxygen_mg_per_l = dissolved_oxygen_uncorrected_mg_per_l * F_s,
-#       salinity_psu = if_else(sal_na == TRUE, NA, salinity_psu)
-#     ) %>%
-#     select(-c(sal_na, dissolved_oxygen_uncorrected_mg_per_l, F_s))
-#
-#   if(rm_sal == TRUE) {
-#     dat <- dat %>% select(-salinity_psu)
-#   }
-#
-#   dat
-# }
-
 # figure height -----------------------------------------------------------
 # calculate the height of figure based on the number of measured variables
 
